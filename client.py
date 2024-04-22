@@ -4,12 +4,11 @@ import uvloop
 import websockets
 import asyncio
 import json    
-from queue import Queue, Empty
+from queue import Queue
 import numpy as np
 import cv2
 import time
-import io
-
+import pyaudio
 
 
 async def recv(frames : Queue, audio: asyncio.Queue, websocket: websockets.WebSocketClientProtocol):
@@ -54,14 +53,29 @@ async def recv(frames : Queue, audio: asyncio.Queue, websocket: websockets.WebSo
 async def playAudio(pcm : asyncio.Queue[bytes],frames: Queue):
     # with open("test.pcm", "wb") as f:
     try:
+        FORMAT = pyaudio.paInt16
+        CHANNELS = 1
+        RATE = 16000
+
+        audio = pyaudio.PyAudio()
+        def callback(in_data, frame_count, time_info, status):           
+            try:
+                data = pcm.get_nowait()
+            except asyncio.QueueEmpty:
+                data = b''
+                # raise Exception("NO DATA")
+            return (data, pyaudio.paContinue)
+
         while pcm.qsize()<17:
             # print("audioWaiting",pcm.qsize())
             await asyncio.sleep(1/30)
-        ffplay = await asyncio.create_subprocess_exec("ffplay","-f","s16le","-ar","16000","-ac","1",'-acodec','pcm_s16le',"pipe:0",stdin=asyncio.subprocess.PIPE)
-        # while pcm.qsize()>0:
-        #     await ffplay.stdin.write(await pcm.get())
-        #     await ffplay.stdin.drain()
-        displayTask = threading.Thread(target = Display,args=(frames,))
+        stream = audio.open(format=FORMAT, channels=CHANNELS,
+                    rate=RATE, output=True,
+                    frames_per_buffer=1024,
+                    # stream_callback=callback
+                    )
+
+        displayTask = threading.Thread(target=Display, args=(frames,))
         displayTask.start()
 
         while True:
@@ -71,9 +85,9 @@ async def playAudio(pcm : asyncio.Queue[bytes],frames: Queue):
                 print("END AUDIO")
                 break
 
-            if ffplay.stdin is not None:
-                ffplay.stdin.write(pcmBytes)
-                await ffplay.stdin.drain()
+            if stream.is_active():
+                stream.write(pcmBytes)
+    
     except Exception as e:
         print("PLAY AUDIO ERROR", e)
         pass
@@ -128,7 +142,7 @@ async def send(websocket:websockets.WebSocketClientProtocol,process: asyncio.sub
     process.kill()
     await process.wait()
 
-async def echo():   
+async def main():   
     async with websockets.connect("ws://34.91.9.107:8892/LipsyncStream") as websocket:
         metadata = {
             "video_reference_url": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.mp4",
@@ -178,4 +192,4 @@ recvTask,
         
 
 uvloop.install()
-asyncio.run(echo())
+asyncio.run(main())
