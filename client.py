@@ -143,7 +143,7 @@ async def send(websocket:websockets.WebSocketClientProtocol,process: asyncio.sub
     await process.wait()
 
 async def main():   
-    async with websockets.connect("ws://127.0.0.1:8893/LipsyncStream") as websocket:
+    async with websockets.connect("ws://127.0.0.1:8892/LipsyncStream") as websocket:
         metadata = {
             "video_reference_url": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.mp4",
             "face_det_results": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.pkl",
