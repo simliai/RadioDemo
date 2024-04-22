@@ -4,7 +4,7 @@ import uvloop
 import websockets
 import asyncio
 import json    
-from queue import Queue
+from queue import Empty, Queue
 import numpy as np
 import cv2
 import time
@@ -66,7 +66,7 @@ async def playAudio(pcm : asyncio.Queue[bytes],frames: Queue):
                 # raise Exception("NO DATA")
             return (data, pyaudio.paContinue)
 
-        while pcm.qsize()<17:
+        while pcm.qsize()<8:
             # print("audioWaiting",pcm.qsize())
             await asyncio.sleep(1/30)
         stream = audio.open(format=FORMAT, channels=CHANNELS,
@@ -99,7 +99,7 @@ def Display(frames : Queue):
         i = 0
         namedWindow = "Video"
         cv2.namedWindow(namedWindow, cv2.WINDOW_NORMAL)
-        while frames.qsize()<17:
+        while frames.qsize()<8:
             cv2.imshow(namedWindow,np.zeros((512,512,3),dtype=np.uint8))
             time.sleep(1/30)
             print("waiting for frames")
@@ -116,8 +116,8 @@ def Display(frames : Queue):
             elif isinstance(frame, np.ndarray):
                 # frame  =cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 cv2.imshow(namedWindow,frame) # type: ignore
-                c = time.time()
                 cv2.waitKey(1)
+                c = time.time()
                 sleepTime = 1/30 - c + s
                 if sleepTime > 1/30:
                     print(sleepTime)
@@ -143,7 +143,7 @@ async def send(websocket:websockets.WebSocketClientProtocol,process: asyncio.sub
     await process.wait()
 
 async def main():   
-    async with websockets.connect("ws://34.91.9.107:8892/LipsyncStream") as websocket:
+    async with websockets.connect("ws://127.0.0.1:8893/LipsyncStream") as websocket:
         metadata = {
             "video_reference_url": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.mp4",
             "face_det_results": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.pkl",
@@ -181,7 +181,7 @@ async def main():
         audio = asyncio.Queue()
         print("sent metadata")
         recvTask = asyncio.create_task(recv(frames,audio,websocket))
-        while frames.qsize()<17:
+        while frames.qsize()<8:
             await asyncio.sleep(1/30)
         audioTask = asyncio.create_task(playAudio(audio,frames,))
         await asyncio.gather(
@@ -191,5 +191,5 @@ recvTask,
         await audioTask
         
 
-uvloop.install()
+# uvloop.install()
 asyncio.run(main())
