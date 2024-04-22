@@ -10,7 +10,7 @@ import cv2
 import time
 import pyaudio
 
-
+    
 async def recv(frames : Queue, audio: asyncio.Queue, websocket: websockets.WebSocketClientProtocol):
     try:
         while True:
@@ -66,7 +66,7 @@ async def playAudio(pcm : asyncio.Queue[bytes],frames: Queue):
                 # raise Exception("NO DATA")
             return (data, pyaudio.paContinue)
 
-        while pcm.qsize()<8:
+        while pcm.qsize()<17:
             # print("audioWaiting",pcm.qsize())
             await asyncio.sleep(1/30)
         stream = audio.open(format=FORMAT, channels=CHANNELS,
@@ -99,7 +99,7 @@ def Display(frames : Queue):
         i = 0
         namedWindow = "Video"
         cv2.namedWindow(namedWindow, cv2.WINDOW_NORMAL)
-        while frames.qsize()<8:
+        while frames.qsize()<17:
             cv2.imshow(namedWindow,np.zeros((512,512,3),dtype=np.uint8))
             time.sleep(1/30)
             print("waiting for frames")
@@ -143,7 +143,7 @@ async def send(websocket:websockets.WebSocketClientProtocol,process: asyncio.sub
     await process.wait()
 
 async def main():   
-    async with websockets.connect("ws://127.0.0.1:8892/LipsyncStream") as websocket:
+    async with websockets.connect("ws://34.91.9.107:8892/LipsyncStream") as websocket:
         metadata = {
             "video_reference_url": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.mp4",
             "face_det_results": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.pkl",
@@ -181,7 +181,7 @@ async def main():
         audio = asyncio.Queue()
         print("sent metadata")
         recvTask = asyncio.create_task(recv(frames,audio,websocket))
-        while frames.qsize()<8:
+        while frames.qsize()<17:
             await asyncio.sleep(1/30)
         audioTask = asyncio.create_task(playAudio(audio,frames,))
         await asyncio.gather(
