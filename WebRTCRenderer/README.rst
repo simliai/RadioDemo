@@ -12,7 +12,7 @@ First install the required packages:
 
 .. code-block:: console
 
-    $ pip install aiohttp aiortc opencv-python websockets librosa numpy
+    $ pip install aiohttp aiortc opencv-python websockets librosa numpy resampy
 
 When you start the example, it will create an HTTP server which you
 can connect to from your browser:
