@@ -1,7 +1,4 @@
-import dis
 import threading
-
-# import uvloop
 import websockets
 import asyncio
 import json
@@ -39,8 +36,8 @@ async def recv(
                     frames.put(f)
                     a = frame[18 + int.from_bytes(frame[5:9], "little") :]
                     await audio.put(a)
-                    c = time.time()
-                    s = c
+                    # c = time.time()
+                    # s = c
                     # first = False
                     # print("received frame")
                 except Exception as e:
@@ -79,7 +76,7 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
         # displayTask.start()
 
         while True:
-            s = time.time()
+            # s = time.time()
             pcmBytes = await pcm.get()
             if pcmBytes is None or not pcmBytes:
                 print("END AUDIO")
@@ -100,7 +97,7 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
 
 def Display(frames: Queue):
     try:
-        i = 0
+        # i = 0
         namedWindow = "Video"
         cv2.namedWindow(namedWindow, cv2.WINDOW_NORMAL)
         while frames.qsize() < 17:
@@ -111,7 +108,7 @@ def Display(frames: Queue):
             s = time.time()
             try:
                 frame = frames.get()
-            except Empty as e:
+            except Empty:
                 time.sleep(0.001)
                 continue
             if isinstance(frame, bool) and not frame:
