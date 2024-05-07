@@ -75,8 +75,8 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
             # stream_callback=callback
         )
 
-        displayTask = threading.Thread(target=Display, args=(frames,))
-        displayTask.start()
+        # displayTask = threading.Thread(target=Display, args=(frames,))
+        # displayTask.start()
 
         while True:
             s = time.time()
@@ -185,7 +185,7 @@ async def main():
         )
         print("FFMPEG STARTED")
         sendTask = asyncio.create_task(send(websocket, process))
-        frames = Queue()
+        # frames = Queue()
         audio = asyncio.Queue()
         print("sent metadata")
         recvTask = asyncio.create_task(recv(frames, audio, websocket))
@@ -205,4 +205,16 @@ async def main():
 
 
 # uvloop.install()
-asyncio.run(main())
+def start_asyncio_loop(frames:Queue):
+    asyncio.new_event_loop().run_until_complete(main(frames))
+
+
+if __name__ == "__main__":
+    # Start the asyncio event loop in a separate thread
+    frames = Queue()
+    threading.Thread(target=start_asyncio_loop, daemon=True, args=(frames,)).start()
+    # Start the OpenCV image display in the main thread
+    while frames.qsize() < 17:
+        time.sleep(1 / 30)
+    Display(frames) 
+# asyncio.run(main())
