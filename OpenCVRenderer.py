@@ -150,7 +150,7 @@ async def send(
     await process.wait()
 
 
-async def main():
+async def main(frames:Queue):
     async with websockets.connect("ws://34.91.9.107:8892/LipsyncStream") as websocket:
         metadata = {
             "video_reference_url": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.mp4",
