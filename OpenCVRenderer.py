@@ -158,14 +158,16 @@ async def send(
 async def main(frames:Queue):
     async with websockets.connect("ws://api.simli.ai/LipsyncStream") as websocket:
         metadata = {
-            "video_reference_url": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.mp4",
-            "face_det_results": "https://storage.googleapis.com/charactervideos/tmp9i8bbq7c/tmp9i8bbq7c.pkl",
+            "video_reference_url": "https://storage.googleapis.com/charactervideos/5514e24d-6086-46a3-ace4-6a7264e5cb7c/5514e24d-6086-46a3-ace4-6a7264e5cb7c.mp4",
+            "face_det_results": "https://storage.googleapis.com/charactervideos/5514e24d-6086-46a3-ace4-6a7264e5cb7c/5514e24d-6086-46a3-ace4-6a7264e5cb7c.pkl",
             "isSuperResolution": True,
             "isJPG": True,
             "syncAudio": True,
         }
         await websocket.send(json.dumps(metadata))
         url = "https://radio.talksport.com/stream"
+        # url = "https://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_world_service/bbc_world_service.isml/bbc_world_service-audio%3d96000.norewind.m3u8"
+        # url = "http://listen.181fm.com/181-comedy_128k.mp3"
         # url = "https://hitwest-tours.ice.infomaniak.ch/hitwest-tours-128.mp3"
         # url = "https://stream-153.zeno.fm/p9m9tuyap98uv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiJwOW05dHV5YXA5OHV2IiwiaG9zdCI6InN0cmVhbS0xNTMuemVuby5mbSIsImp0aSI6InBJanEzQTE0VE0tMXJfVGdpOFo3MlEiLCJpYXQiOjE3MTUxNTU1MDAsImV4cCI6MTcxNTE1NTU2MH0.Xmqls2bK73K6PVMksMzJX4KxK_WpZNF1iUSlqjfdbOo&zttl=5"
         # url = "https://audio-edge-3mayu.fra.h.radiomast.io/a622d414-52a6-4426-b3b8-ed2a4dbb704b"
