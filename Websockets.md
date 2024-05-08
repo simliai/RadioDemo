@@ -6,7 +6,7 @@ This endpoint is a websockets endpoint that takes in a stream of PCM16 audio fra
 
 ## Client Flowchart
 
-![Lipsyncstream.png](Lipsyncstream.png)
+![LipsyncStream.png](LipsyncStream.png)
 
 ## Initial Request Format
 
