@@ -62,7 +62,7 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
 
         audio = pyaudio.PyAudio()
 
-        while pcm.qsize() < 17:
+        while pcm.qsize() <3:
             await asyncio.sleep(0.001)
         
         stream = audio.open(
@@ -197,7 +197,7 @@ async def main(frames:Queue):
         audio = asyncio.Queue()
         print("sent metadata")
         recvTask = asyncio.create_task(recv(frames, audio, websocket))
-        while frames.qsize() < 17:
+        while frames.qsize() < 1:
             await asyncio.sleep(0.001)
         
         # while not DisplayStarted:
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     frames = Queue()
     threading.Thread(target=start_asyncio_loop, daemon=True, args=(frames,)).start()
     # Start the OpenCV image display in the main thread
-    while frames.qsize() < 17:
+    while frames.qsize() <17:
         time.sleep(0.001)
     Display(frames) 
 # asyncio.run(main())
