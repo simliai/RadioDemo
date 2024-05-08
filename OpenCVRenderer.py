@@ -78,8 +78,8 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
 
         # displayTask = threading.Thread(target=Display, args=(frames,))
         # displayTask.start()
-        while not DisplayStarted:
-            await asyncio.sleep(0.001)
+        # while not DisplayStarted:
+        #     await asyncio.sleep(0.001)
             
         while True:
             # s = time.time()
@@ -165,6 +165,10 @@ async def main(frames:Queue):
         }
         await websocket.send(json.dumps(metadata))
         url = "https://radio.talksport.com/stream"
+        # url = "https://hitwest-tours.ice.infomaniak.ch/hitwest-tours-128.mp3"
+        # url = "https://stream-153.zeno.fm/p9m9tuyap98uv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiJwOW05dHV5YXA5OHV2IiwiaG9zdCI6InN0cmVhbS0xNTMuemVuby5mbSIsImp0aSI6InBJanEzQTE0VE0tMXJfVGdpOFo3MlEiLCJpYXQiOjE3MTUxNTU1MDAsImV4cCI6MTcxNTE1NTU2MH0.Xmqls2bK73K6PVMksMzJX4KxK_WpZNF1iUSlqjfdbOo&zttl=5"
+        # url = "https://audio-edge-3mayu.fra.h.radiomast.io/a622d414-52a6-4426-b3b8-ed2a4dbb704b"
+        
         ffmpeg = [
             "ffmpeg",
             "-nostdin",
@@ -195,6 +199,9 @@ async def main(frames:Queue):
         recvTask = asyncio.create_task(recv(frames, audio, websocket))
         while frames.qsize() < 17:
             await asyncio.sleep(0.001)
+        
+        # while not DisplayStarted:
+        #     await asyncio.sleep(0.001)
         
         audioTask = asyncio.create_task(
             playAudio(
