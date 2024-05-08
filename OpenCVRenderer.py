@@ -55,7 +55,6 @@ async def recv(
 
 
 async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
-    # with open("test.pcm", "wb") as f:
     try:
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
@@ -64,7 +63,6 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
         audio = pyaudio.PyAudio()
 
         while pcm.qsize() < 17:
-            # print("audioWaiting",pcm.qsize())
             await asyncio.sleep(0.001)
         
         stream = audio.open(
@@ -73,7 +71,6 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
             rate=RATE,
             output=True,
             frames_per_buffer=1024,
-            # stream_callback=callback
         )
 
         # displayTask = threading.Thread(target=Display, args=(frames,))

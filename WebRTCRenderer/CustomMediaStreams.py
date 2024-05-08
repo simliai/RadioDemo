@@ -1,25 +1,14 @@
-import argparse
 import asyncio
-from hmac import new
 import json
-import logging
-import os
-from queue import Queue
-from re import A
-import ssl
 import time
 from typing import Optional
-import uuid
 import resampy
 import numpy as np
 import cv2
-from aiohttp import web
-from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription, AudioStreamTrack, VideoStreamTrack
-from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder, MediaRelay
+from aiortc import MediaStreamTrack, AudioStreamTrack
 from aiortc.mediastreams import MediaStreamError
 from av import VideoFrame # type: ignore
 from av import AudioFrame # type: ignore
-import librosa
 import websockets
 import fractions
 
@@ -28,9 +17,9 @@ class WSVideoTrack(MediaStreamTrack):
     def __init__(self):
         super().__init__()
         self.frameQueue:asyncio.Queue[bytes] = asyncio.Queue()
-        print("GNIERGNIRGN")
         self.currentTime = 0
         self.start=  time.time()
+
     async def recv(self):
         # print("recv called")
         try:
@@ -52,8 +41,7 @@ class WSVideoTrack(MediaStreamTrack):
             # else:
             #     print("Video NOT Sleeping", sleepTime)
             return new_frame
-        except Exception as e:
-            print("EOGNEOGNOIEGNIOGENG",e)
+        except Exception:
             import traceback
             traceback.print_exc()
 
@@ -65,7 +53,6 @@ class WSAudioTrack(MediaStreamTrack):
         self.timeStamp = 0
         self.timeBase = fractions.Fraction(1,16000)
         self.sampleRate = 16000
-        print("GNIRNGIn")
         self.start = time.time()
         self.first = True
         self.dump = open("dump.pcm", "wb")
@@ -95,13 +82,12 @@ class WSAudioTrack(MediaStreamTrack):
             sleepTime = 1/30-time.time()+self.start
             if sleepTime > 0:
                 await asyncio.sleep(sleepTime)
-                print("Audio Sleeping", sleepTime)
-            # else:
-            #     # print("Audio NOT Sleeping", sleepTime)
             return frame
             
-        except Exception as e:
-            print("EOGNEOGNOIEGNIOGENG",e)
+        except Exception:
+            import traceback
+            traceback.print_exc()
+
 
     def __del__(self):
         self.dump.close()
@@ -142,8 +128,9 @@ class WebSocketReceiver(MediaStreamTrack):
                         # print("Audio Queue Size:", self.AudioStream.frameQueue.qsize())
                         print("Latency:", time.time()-self.sentStamp)
                         count += 1
-                except Exception as e:
-                    print("ROIGNGNRIGR",e)
+                except Exception:
+                    import traceback
+                    traceback.print_exc()
         
     async def recv(self):
         if not self.Run:
@@ -301,18 +288,15 @@ class WSRadio:
                         await self.frames.put(f)
                         a = frame[18+int.from_bytes(frame[5:9], 'little'):]
                         await self.audio.put(a)
-                        c = time.time()
-                        s = c
-                        # first = False
-                        # print("received frame")
                     except Exception as e:
                         print(e)
         except websockets.exceptions.ConnectionClosed as e:
             print("DISCONNECTED", e)
 
-        except Exception as e:
-            print("ENOF", e)
-            pass
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            
         await self.frames.put(False)
     
     async def GetStreams(self):

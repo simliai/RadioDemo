@@ -37,7 +37,6 @@ async def javascript(request):
 async def offer(request):
     params = await request.json()
     offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-    print(offer)
     pc = RTCPeerConnection()
     pc_id = "PeerConnection(%s)" % uuid.uuid4()
     pcs.add(pc)
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     parser.add_argument("--cert-file", help="SSL certificate file (for HTTPS)")
     parser.add_argument("--key-file", help="SSL key file (for HTTPS)")
     parser.add_argument(
-        "--host", default="0.0.0.0", help="Host for HTTP server (default: 0.0.0.0)"
+        "--host", default="127.0.0.1", help="Host for HTTP server (default: 127.0.0.1)"
     )
     parser.add_argument(
         "--port", type=int, default=8080, help="Port for HTTP server (default: 8080)"
