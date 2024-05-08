@@ -105,7 +105,8 @@ def Display(frames: Queue):
     try:
         # i = 0
         namedWindow = "Video"
-        cv2.namedWindow(namedWindow, cv2.WINDOW_NORMAL)
+        cv2.startWindowThread()
+        cv2.namedWindow(namedWindow, cv2.WINDOW_NORMAL | cv2.WINDOW_AUTOSIZE | cv2.WINDOW_KEEPRATIO)
         while frames.qsize() < 17:
             cv2.imshow(namedWindow, np.zeros((512, 512, 3), dtype=np.uint8))
             time.sleep(0.001)
