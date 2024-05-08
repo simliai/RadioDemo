@@ -2,6 +2,8 @@
 
 This is a showcase of the [Simli Lipsync API](ws://api.simli.ai/LipsyncStream) in action. The demo works by getting an mp3 radio stream, converting it to pcm16 using ffmpeg and sending the pcm16 frames to the Simli Lipsync API over websockets.
 
+For the response spec, check [Websockets.md](Websockets.md)
+
 1. *OpenCVRenderer.py*: Uses OpenCV and PyAudio to render the video and audio on the screen.
 
 ## Installation
