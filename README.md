@@ -33,6 +33,8 @@ pip install -r requirements.txt
 
 ### OpenCVRenderer.py
 
+! Disclaimer: Moving the OpenCV window around can cause the audio to be out of sync with the video.
+
 ``` bash
 python OpenCVRenderer.py
 ```
