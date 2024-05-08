@@ -37,16 +37,16 @@ If there's nothing to send, you must send a zero value byte array of length 250m
 
 The response format changes based on the `syncAudio` field in the request. The response is a binary encoded format that follows this structure:
 
-- 5 bytes: `VIDEO`
-- 4 bytes: number of bytes in the video frame with the following format:
+- 5 bytes (str): `VIDEO`
+- 4 bytes (int32): number of bytes in the video frame with the following format:
 - v bytes: Video frame with metadata
-  - 4 bytes: frame index
-  - 4 bytes: frame width
-  - 4 bytes: frame height
-  - f bytes: video frame bytes
-- 5 bytes: `AUDIO`
-- 4 bytes: number of bytes in the audio frame
-- a bytes: audio frame
+  - 4 bytes(int32): frame index
+  - 4 bytes(int32): frame width
+  - 4 bytes(int32): frame height
+  - f bytes (byte array): video frame bytes
+- 5 bytes (str): `AUDIO`
+- 4 bytes (int32): number of bytes in the audio frame
+- a bytes (int16): audio frame
 
 The video frame is a JPG image if `isJPG` is set to true. This means that it must be decoded accordingly depending on the language you are using. If set to false, the video frame will be a raw matrix representation with shape 512x512x3.
 Audio is always pcm 16bit 16000Hz mono.
