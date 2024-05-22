@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 import time
 import pyaudio
+import requests
 
 DisplayStarted = False
 
@@ -15,10 +16,9 @@ async def recv(
 ):
     try:
         while True:
-            s= time.time()
-            # print("RECEIVING")
+            s = time.time()
             frame = await websocket.recv()
-            # print(len(frame))
+            print("TIME", time.time() - s)
             if frame == "DONE":
                 print("DONE")
                 frames.put(False)
@@ -28,9 +28,7 @@ async def recv(
                 print("CHUNK START", int.from_bytes(frame[10:14], "little"))
                 frames.put(True)
                 continue
-            # frame = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), flags=1)
             if frame is not None and isinstance(frame, bytes) and len(frame) > 0:
-                # print("RECEIVED", len(frame))
                 try:
                     f = frame[9 : 9 + int.from_bytes(frame[5:9], "little")]
                     f = np.frombuffer(f[12:], dtype=np.uint8)
@@ -38,21 +36,14 @@ async def recv(
                     frames.put(f)
                     a = frame[18 + int.from_bytes(frame[5:9], "little") :]
                     await audio.put(a)
-                    # c = time.time()
-                    # s = c
-                    # first = False
-                    # print("received frame")
                 except Exception as e:
                     print(e)
-            print("TIME", time.time()-s)
     except websockets.exceptions.ConnectionClosed as e:
         print("DISCONNECTED", e)
-
     except Exception as e:
         print("ENOF", e)
         pass
     frames.put(False)
-
 
 async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
     try:
@@ -62,7 +53,7 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
 
         audio = pyaudio.PyAudio()
 
-        while pcm.qsize() <3:
+        while pcm.qsize() < 16:
             await asyncio.sleep(0.001)
         
         stream = audio.open(
@@ -73,13 +64,7 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
             frames_per_buffer=1024,
         )
 
-        # displayTask = threading.Thread(target=Display, args=(frames,))
-        # displayTask.start()
-        # while not DisplayStarted:
-        #     await asyncio.sleep(0.001)
-            
         while True:
-            # s = time.time()
             pcmBytes = await pcm.get()
             if pcmBytes is None or not pcmBytes:
                 print("END AUDIO")
@@ -97,14 +82,12 @@ async def playAudio(pcm: asyncio.Queue[bytes], frames: Queue):
         except NameError:
             pass
 
-
 def Display(frames: Queue):
     try:
-        # i = 0
         namedWindow = "Video"
         cv2.startWindowThread()
         cv2.namedWindow(namedWindow, cv2.WINDOW_NORMAL | cv2.WINDOW_AUTOSIZE | cv2.WINDOW_KEEPRATIO)
-        while frames.qsize() < 17:
+        while frames.qsize() < 16:
             cv2.imshow(namedWindow, np.zeros((512, 512, 3), dtype=np.uint8))
             time.sleep(0.001)
             print("waiting for frames")
@@ -115,27 +98,23 @@ def Display(frames: Queue):
             try:
                 frame = frames.get()
             except Empty:
-                # time.sleep(0.001)
                 continue
             if isinstance(frame, bool) and not frame:
                 print("END")
                 break
             elif isinstance(frame, np.ndarray):
-                # frame  =cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 cv2.imshow(namedWindow, frame)
                 cv2.waitKey(1)
                 c = time.time()
                 sleepTime = 1 / 30 - c + s
                 if sleepTime > 0:
                     time.sleep(sleepTime)
-                # print("SLEEP", sleepTime)
                 s = time.time()
     except Exception as e:
         print("DISPLAY ERROR", e)
         pass
     finally:
         print("DISPLAY DONE")
-
 
 async def send(
     websocket: websockets.WebSocketClientProtocol, process: asyncio.subprocess.Process
@@ -146,29 +125,30 @@ async def send(
             print("NO STDOUT")
             break
         data = await process.stdout.read(4096)
-        # print(len(data))
         await websocket.send(data)
     process.kill()
     await process.wait()
 
+async def main(frames: Queue):
+    # Start a new session and get the session token
+    metadata = {
+        "video_reference_url": "https://storage.googleapis.com/charactervideos/5514e24d-6086-46a3-ace4-6a7264e5cb7c/5514e24d-6086-46a3-ace4-6a7264e5cb7c.mp4",
+        "isJPG": True,
+        "faceId": "tmp9i8bbq7c",
+        "syncAudio": True,
+        "apiKey": "9gunxygzoyl8txw6wb3hfd"  # Replace with your actual API key
+    }
+    response = requests.post("https://api.simli.ai/startAudioToVideoSession", json=metadata)
+    response.raise_for_status()
+    session_token = response.json()["session_token"]
+    print("Received session: ", session_token)
 
-async def main(frames:Queue):
-    async with websockets.connect("ws://api.simli.ai/LipsyncStream") as websocket:
-        metadata = {
-            "video_reference_url": "https://storage.googleapis.com/charactervideos/5514e24d-6086-46a3-ace4-6a7264e5cb7c/5514e24d-6086-46a3-ace4-6a7264e5cb7c.mp4",
-            "face_det_results": "https://storage.googleapis.com/charactervideos/5514e24d-6086-46a3-ace4-6a7264e5cb7c/5514e24d-6086-46a3-ace4-6a7264e5cb7c.pkl",
-            "isSuperResolution": True,
-            "isJPG": True,
-            "syncAudio": True,
-        }
-        await websocket.send(json.dumps(metadata))
+    async with websockets.connect("wss://api.simli.ai/LipsyncStream") as websocket:
+        await websocket.send(session_token)
+        print("Sent session token")
+
         url = "https://radio.talksport.com/stream"
-        # url = "https://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_world_service/bbc_world_service.isml/bbc_world_service-audio%3d96000.norewind.m3u8"
-        # url = "http://listen.181fm.com/181-comedy_128k.mp3"
-        # url = "https://hitwest-tours.ice.infomaniak.ch/hitwest-tours-128.mp3"
-        # url = "https://stream-153.zeno.fm/p9m9tuyap98uv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiJwOW05dHV5YXA5OHV2IiwiaG9zdCI6InN0cmVhbS0xNTMuemVuby5mbSIsImp0aSI6InBJanEzQTE0VE0tMXJfVGdpOFo3MlEiLCJpYXQiOjE3MTUxNTU1MDAsImV4cCI6MTcxNTE1NTU2MH0.Xmqls2bK73K6PVMksMzJX4KxK_WpZNF1iUSlqjfdbOo&zttl=5"
-        # url = "https://audio-edge-3mayu.fra.h.radiomast.io/a622d414-52a6-4426-b3b8-ed2a4dbb704b"
-        
+
         ffmpeg = [
             "ffmpeg",
             "-nostdin",
@@ -193,16 +173,12 @@ async def main(frames:Queue):
         )
         print("FFMPEG STARTED")
         sendTask = asyncio.create_task(send(websocket, process))
-        # frames = Queue()
         audio = asyncio.Queue()
         print("sent metadata")
         recvTask = asyncio.create_task(recv(frames, audio, websocket))
         while frames.qsize() < 1:
             await asyncio.sleep(0.001)
-        
-        # while not DisplayStarted:
-        #     await asyncio.sleep(0.001)
-        
+
         audioTask = asyncio.create_task(
             playAudio(
                 audio,
@@ -215,18 +191,12 @@ async def main(frames:Queue):
         )
         await audioTask
 
-
-# uvloop.install()
-def start_asyncio_loop(frames:Queue):
+def start_asyncio_loop(frames: Queue):
     asyncio.new_event_loop().run_until_complete(main(frames))
 
-
 if __name__ == "__main__":
-    # Start the asyncio event loop in a separate thread
     frames = Queue()
     threading.Thread(target=start_asyncio_loop, daemon=True, args=(frames,)).start()
-    # Start the OpenCV image display in the main thread
-    while frames.qsize() <17:
+    while frames.qsize() < 16:
         time.sleep(0.001)
-    Display(frames) 
-# asyncio.run(main())
+    Display(frames)
