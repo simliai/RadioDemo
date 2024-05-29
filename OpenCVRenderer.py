@@ -136,7 +136,8 @@ async def main(frames: Queue):
         "isJPG": True,
         "faceId": "tmp9i8bbq7c",
         "syncAudio": True,
-        "apiKey": "9gunxygzoyl8txw6wb3hfd"  # Replace with your actual API key
+        "apiKey": "9gunxygzoyl8txw6wb3hfd",  # Replace with your actual API key
+        'batchSize': 4,
     }
     response = requests.post("https://api.simli.ai/startAudioToVideoSession", json=metadata)
     response.raise_for_status()
